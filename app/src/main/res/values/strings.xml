@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">BrightnessSample</string>
+    <string name="screen_brightness">Brightness level: %.0f%%</string>
 </resources>
+

@@ -1,35 +1,35 @@
 package com.ludovic.vimont.brightnesssample
 
-import android.content.Context
+import android.content.ContentResolver
 import android.database.ContentObserver
 import android.os.Handler
 import android.provider.Settings
 
-class ScreenBrightnessManager(val context: Context, handler: Handler) : ContentObserver(handler) {
+class ScreenBrightnessManager(private val contentResolver: ContentResolver, handler: Handler) : ContentObserver(handler) {
     companion object {
-        val MAXIMUM_BRIGHTNESS = 255
-        val NUM_SCREEN_BRIGHTNESS_BINS = 5
-        var screenBrightnessTimer = LongArray(NUM_SCREEN_BRIGHTNESS_BINS)
+        val MAX_BRIGHTNESS = 255
     }
+    private var screenBrightnessListener: ScreenBrightnessListener? = null
 
-    var timer: Long = System.currentTimeMillis()
-    var currentBrightness = getScreenBrightness()
-
-    init {
-        context.contentResolver.registerContentObserver(
+    fun registerContentObserver() {
+        contentResolver.registerContentObserver(
             Settings.System.getUriFor(Settings.System.SCREEN_BRIGHTNESS), false, this
         )
     }
 
-    override fun onChange(selfChange: Boolean) {
-        if (selfChange) {
-            screenBrightnessTimer[currentBrightness / (MAXIMUM_BRIGHTNESS / NUM_SCREEN_BRIGHTNESS_BINS)] += System.currentTimeMillis() - timer
-            currentBrightness = getScreenBrightness()
-            timer = System.currentTimeMillis()
-        }
+    fun unregisterContentObserver() {
+        contentResolver.unregisterContentObserver(this)
     }
 
-    private fun getScreenBrightness(): Int {
-        return Settings.System.getInt(context.contentResolver, Settings.System.SCREEN_BRIGHTNESS, 0)
+    override fun onChange(selfChange: Boolean) {
+        screenBrightnessListener?.onBrightnessChange(getScreenBrightness())
+    }
+
+    fun getScreenBrightness(): Int {
+        return Settings.System.getInt(contentResolver, Settings.System.SCREEN_BRIGHTNESS, 0)
+    }
+
+    fun setScreenBrightnessListener(screenBrightnessListener: ScreenBrightnessListener) {
+        this.screenBrightnessListener = screenBrightnessListener
     }
 }
